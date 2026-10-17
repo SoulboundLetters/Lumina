@@ -153,7 +153,6 @@ export default function Lumina() {
       }
 
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
-      speak(reply);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting right now, my dear..." }]);
     }
@@ -304,12 +303,22 @@ export default function Lumina() {
             <div className="flex-1 p-6 overflow-y-auto space-y-6">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-5 rounded-2xl ${msg.role === 'user' ? 'bg-violet-600' : 'bg-white/10 border border-purple-400/30'}`}>
+                  <div className={`max-w-[85%] p-5 rounded-2xl ${msg.role === 'user' 
+                    ? 'bg-violet-600' 
+                    : 'bg-white/10 border border-purple-400/30'}`}>
                     <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
-                  </div>
+                    {msg.role === 'assistant' && (
+                      <button
+                        onClick={() => speak(msg.content)}
+                        className="mt-3 text-xs text-pink-300 hover:text-pink-100 flex items-center gap-1"
+                    >
+                      🔊 Play
+                    </button>
+                  )}
                 </div>
-              ))}
-              {isLoading && <div className="text-pink-300 italic">Lumina is thinking of you...</div>}
+              </div>
+            ))}
+              {isLoading && <div className="text-pink-300 italic">Lumina is thinking...</div>}
               <div ref={chatEndRef} />
             </div>
 
