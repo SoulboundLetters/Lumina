@@ -323,7 +323,7 @@ export default function Lumina() {
             </div>
 
             <div className="p-3 sm:p-6 border-t border-purple-500/30">
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="flex flex-col gap-3">
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -332,21 +332,21 @@ export default function Lumina() {
                       e.preventDefault();
                       sendMessage();
                     }
-                }}
+                  }}
                   placeholder="Speak to me... (Shift + Enter for new line)"
-                  className="flex-1 bg-white/10 border border-purple-400/50 rounded-2xl px-4 py-3 focus:outline-none focus:border-pink-400 placeholder:text-purple-300 min-h-[48px] max-h-[120px] resize-none text-base w-full"
-                  rows={1}
+                  className="w-full bg-white/10 border border-purple-400/50 rounded-2xl px-4 py-3 focus:outline-none focus:border-pink-400 placeholder:text-purple-300 min-h-[72px] max-h-[160px] resize-y text-base"
+                  rows={2}
                 />
-                <div className="flex gap-2 justify-end sm:justify-start">
+                <div className="flex gap-2 justify-end">
                   <button 
                     onClick={toggleVoiceInput} 
-                    className={`px-3 py-2 rounded-xl text-sm ${isListening ? 'bg-red-600' : 'bg-purple-600'}`}
+                    className={`px-4 py-2.5 rounded-xl text-sm ${isListening ? 'bg-red-600' : 'bg-purple-600'}`}
                   >
                     {isListening ? '⏹️' : '🎤'}
                   </button>
                   <button 
                     onClick={isSpeaking ? stopSpeaking : repeatLast} 
-                    className={`px-3 py-2 rounded-xl text-sm ${isSpeaking ? 'bg-amber-600' : 'bg-purple-700'}`}
+                    className={`px-4 py-2.5 rounded-xl text-sm ${isSpeaking ? 'bg-amber-600' : 'bg-purple-700'}`}
                     disabled={!lastSpokenText.current}
                   >
                     {isSpeaking ? '⏹️' : '🔁'}
@@ -354,7 +354,7 @@ export default function Lumina() {
                   <button 
                     onClick={() => sendMessage()} 
                     disabled={isLoading} 
-                    className="bg-gradient-to-r from-pink-500 to-violet-500 px-5 py-2 rounded-xl font-medium disabled:opacity-50 text-sm"
+                    className="bg-gradient-to-r from-pink-500 to-violet-500 px-6 py-2.5 rounded-xl font-medium disabled:opacity-50 text-sm"
                   >
                     Send
                   </button>
