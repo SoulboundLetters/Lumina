@@ -337,7 +337,11 @@ export default function Lumina() {
                   className="flex-1 bg-white/10 border border-purple-400/50 rounded-2xl px-6 py-5 focus:outline-none focus:border-pink-400 placeholder:text-purple-300 min-h-[80px] max-h-[200px] resize-y text-base"
                   rows={3}
                 />
-                <button onClick={() => sendMessage()} disabled={isLoading} className="bg-gradient-to-r from-pink-500 to-violet-500 px-8 rounded-2xl font-medium disabled:opacity-50">
+                <button 
+                  onClick={() => sendMessage()} 
+                  disabled={isLoading} 
+                  className="bg-gradient-to-r from-pink-500 to-violet-500 px-5 sm:px-8 py-2 sm:py-3 rounded-2xl font-medium disabled:opacity-50 text-sm sm:text-base"
+                >
                   Send
                 </button>
                 <button onClick={toggleVoiceInput} className={`px-6 rounded-2xl ${isListening ? 'bg-red-600' : 'bg-purple-600'}`}>
