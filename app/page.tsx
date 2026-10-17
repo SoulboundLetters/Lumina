@@ -300,10 +300,10 @@ export default function Lumina() {
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Chat Area */}
           <div className="flex-1 bg-black/40 backdrop-blur-xl rounded-3xl h-[70vh] flex flex-col border border-purple-500/30 overflow-hidden">
-            <div className="flex-1 p-6 overflow-y-auto space-y-6">
+            <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-5 rounded-2xl ${msg.role === 'user' 
+                  <div className={`max-w-[100%] sm:max-w-[85%] p-4 sm:p-5 rounded-2xl ${msg.role === 'user' 
                     ? 'bg-violet-600' 
                     : 'bg-white/10 border border-purple-400/30'}`}>
                     <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
