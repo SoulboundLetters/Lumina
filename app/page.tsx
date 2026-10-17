@@ -322,8 +322,8 @@ export default function Lumina() {
               <div ref={chatEndRef} />
             </div>
 
-            <div className="p-6 border-t border-purple-500/30">
-              <div className="flex gap-3">
+            <div className="p-4 border-t border-purple-500/30">
+              <div className="flex flex-col gap-3">
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -334,21 +334,29 @@ export default function Lumina() {
                     }
                   }}
                   placeholder="Speak to me... (Shift + Enter for new line)"
-                  className="flex-1 bg-white/10 border border-purple-400/50 rounded-2xl px-6 py-5 focus:outline-none focus:border-pink-400 placeholder:text-purple-300 min-h-[80px] max-h-[200px] resize-y text-base"
-                  rows={3}
+                  className="w-full bg-white/10 border border-purple-400/50 rounded-2xl px-4 py-3 focus:outline-none focus:border-pink-400 placeholder:text-purple-300 min-h-[60px] max-h-[140px] resize-y text-base"
+                  rows={2}
                 />
+                <div className="flex gap-2 justify-end">
+                  <button 
+                    onClick={toggleVoiceInput} 
+                    className={`px-4 py-2 rounded-xl ${isListening ? 'bg-red-600' : 'bg-purple-600'} text-sm`}
+                >
+                  {isListening ? '⏹️' : '🎤'}
+                </button>
+                <button 
+                  onClick={isSpeaking ? stopSpeaking : repeatLast} 
+                  className={`px-4 py-2 rounded-xl ${isSpeaking ? 'bg-amber-600' : 'bg-purple-700'} text-sm`}
+                  disabled={!lastSpokenText.current}
+                >
+                  {isSpeaking ? '⏹️' : '🔁'}
+                </button>
                 <button 
                   onClick={() => sendMessage()} 
                   disabled={isLoading} 
-                  className="bg-gradient-to-r from-pink-500 to-violet-500 px-5 sm:px-8 py-2 sm:py-3 rounded-2xl font-medium disabled:opacity-50 text-sm sm:text-base"
+                  className="bg-gradient-to-r from-pink-500 to-violet-500 px-6 py-2 rounded-xl font-medium disabled:opacity-50 text-sm"
                 >
                   Send
-                </button>
-                <button onClick={toggleVoiceInput} className={`px-6 rounded-2xl ${isListening ? 'bg-red-600' : 'bg-purple-600'}`}>
-                  {isListening ? '⏹️' : '🎤'}
-                </button>
-                <button onClick={isSpeaking ? stopSpeaking : repeatLast} className={`px-6 rounded-2xl ${isSpeaking ? 'bg-amber-600' : 'bg-purple-700'}`} disabled={!lastSpokenText.current}>
-                  {isSpeaking ? '⏹️' : '🔁'}
                 </button>
               </div>
             </div>
