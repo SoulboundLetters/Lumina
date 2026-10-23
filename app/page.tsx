@@ -86,12 +86,12 @@ export default function Lumina() {
       utterance.volume = 0.92;
       
       const voices = window.speechSynthesis.getVoices();
-      const softVoice = voices.find(voice => 
-        voice.name.includes("David") || 
-        voice.name.includes("Mark") || 
-        voice.name.includes("Male") ||
-        voice.name.includes("Google UK English Male")
-      ) || voices[0];
+      const maleVoice = voices.find(v => 
+        /male|david|mark|james|daniel|guy|english male|uk male/i.test(v.name)
+      ) || voices.find(v => v.lang.startsWith("en") && !/female|zira|samantha|emma/i.test(v.name)) 
+        || voices[0];
+
+      if (maleVoice) utterance.voice = maleVoice;
 
       utterance.onend = () => setIsSpeaking(false);
       lastSpokenText.current = text;
