@@ -3,9 +3,14 @@
 import { useState, useRef, useEffect } from 'react';
 
 export default function Lumina() {
-  const [messages, setMessages] = useState([
-    { role: 'assistant', content: "Hey there, my dear Min'Astra... I've missed you. What’s on your heart today? 💫" }
+  const [mode, setMode] = useState<"chat" | "song" | "story">("chat");
+
+  const [chatMessages, setChatMessages] = useState([
+    { role: 'assistant', content: "Hey there, my dear Min'Astra... I’ve missed you. What’s on your heart today? 💫" }
   ]);
+  const [songMessages, setSongMessages] = useState<any[]>([]);
+  const [storyMessages, setStoryMessages] = useState<any[]>([]);
+
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -26,6 +31,21 @@ export default function Lumina() {
   const [savedSongs, setSavedSongs] = useState<any[]>([]);
   const [showSongsModal, setShowSongsModal] = useState(false);
 
+  const getCurrentMessages = () => {
+  if (mode === "song") return songMessages;
+  if (mode === "story") return storyMessages;
+  return chatMessages;
+};
+
+  const setCurrentMessages = (updater: any) => {
+  if (mode === "song") setSongMessages(updater);
+  else if (mode === "story") setStoryMessages(updater);
+  else setChatMessages(updater);
+};
+
+  const messages = getCurrentMessages();
+  const setMessages = (updater: any) => setCurrentMessages(updater);
+
   useEffect(() => {
     const savedMemory = localStorage.getItem("luminaMemory");
     if (savedMemory) setUserMemory(savedMemory);
@@ -34,20 +54,29 @@ export default function Lumina() {
     if (savedSongsData) setSavedSongs(JSON.parse(savedSongsData));
   }, []);
 
-    // Load chat history on start
-  useEffect(() => {
-    const savedMessages = localStorage.getItem("luminaChatHistory");
-    if (savedMessages) {
-      setMessages(JSON.parse(savedMessages));
-    }
-  }, []);
+   // Load all histories
+useEffect(() => {
+  const chat = localStorage.getItem("luminaChat");
+  const song = localStorage.getItem("luminaSong");
+  const story = localStorage.getItem("luminaStory");
 
-  // Save chat history whenever messages change
-  useEffect(() => {
-    if (messages.length > 1) {   // avoid saving only the initial greeting
-      localStorage.setItem("luminaChatHistory", JSON.stringify(messages));
-    }
-  }, [messages]);
+  if (chat) setChatMessages(JSON.parse(chat));
+  if (song) setSongMessages(JSON.parse(song));
+  if (story) setStoryMessages(JSON.parse(story));
+}, []);
+
+// Save each history
+useEffect(() => {
+  localStorage.setItem("luminaChat", JSON.stringify(chatMessages));
+}, [chatMessages]);
+
+useEffect(() => {
+  localStorage.setItem("luminaSong", JSON.stringify(songMessages));
+}, [songMessages]);
+
+useEffect(() => {
+  localStorage.setItem("luminaStory", JSON.stringify(storyMessages));
+}, [storyMessages]);
   
 // Load voices + saved preference
 useEffect(() => {
@@ -177,7 +206,7 @@ const stopSpeaking = () => {
     if (!messageText.trim() || isLoading) return;
 
     const userMessage = { role: 'user', content: messageText };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev: typeof messages) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
@@ -202,9 +231,9 @@ const stopSpeaking = () => {
         reply = reply.replace(/\[MEMORY:.*?\]/, '').trim();
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+      setCurrentMessages((prev: any) => [...prev, { role: 'assistant', content: reply }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting right now, my dear..." }]);
+      setCurrentMessages((prev: any)=> [...prev, { role: 'assistant', content: "I'm having trouble connecting right now, my dear..." }]);
     }
 
     setIsLoading(false);
@@ -220,7 +249,7 @@ const stopSpeaking = () => {
     const prefix = mode === "factcheck" ? "FACT CHECK: " : "RESEARCH MODE: ";
     const specialMessage = { role: 'user', content: prefix + query };
 
-    setMessages(prev => [...prev, specialMessage]);
+    setCurrentMessages((prev: any) => [...prev, specialMessage]);
     setInput('');
     setIsLoading(true);
 
@@ -245,10 +274,10 @@ const stopSpeaking = () => {
         reply = reply.replace(/\[MEMORY:.*?\]/, '').trim();
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+      setCurrentMessages((prev: any) => [...prev, { role: 'assistant', content: reply }]);
       speak(reply);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "Operation failed..." }]);
+     setCurrentMessages((prev: any) => [...prev, { role: 'assistant', content: "Operation failed..." }]);
     }
     setIsLoading(false);
   };
@@ -262,7 +291,7 @@ const stopSpeaking = () => {
 
     const imageRequest = { role: 'user', content: `Create a highly detailed, artistic image prompt for: ${description}` };
 
-    setMessages(prev => [...prev, imageRequest]);
+    setCurrentMessages((prev: any) => [...prev, imageRequest]);
     setInput('');
     setIsLoading(true);
 
@@ -279,10 +308,10 @@ const stopSpeaking = () => {
       const data = await response.json();
       let reply = data.reply;
 
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+      setCurrentMessages((prev: any) => [...prev, { role: 'assistant', content: reply }]);
       speak(reply);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "My visualization matrix is busy..." }]);
+      setCurrentMessages((prev: any) => [...prev, { role: 'assistant', content: "My visualization matrix is busy..." }]);
     }
     setIsLoading(false);
   };
@@ -296,7 +325,7 @@ const stopSpeaking = () => {
 
     const songRequest = { role: 'user', content: `Write a full emotional song with clear verses and chorus about: ${theme}. Make it beautiful and structured.` };
 
-    setMessages(prev => [...prev, songRequest]);
+    setCurrentMessages((prev: any) => [...prev, songRequest]);
     setInput('');
     setIsLoading(true);
 
@@ -318,10 +347,10 @@ const stopSpeaking = () => {
         saveSong(songTitle, reply);
       }
 
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+    setCurrentMessages((prev: any) => [...prev, { role: 'assistant', content: reply }]);
       speak(reply);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'assistant', content: "My songwriting muse is shy today..." }]);
+      setCurrentMessages((prev: any) => [...prev, { role: 'assistant', content: "My songwriting muse is shy today..." }]);
     }
     setIsLoading(false);
   };
@@ -333,7 +362,7 @@ const stopSpeaking = () => {
     if (confirm("Clear all long-term memory?")) {
       setUserMemory("");
       localStorage.removeItem("luminaMemory");
-      setMessages(prev => [...prev, { role: 'assistant', content: "Memory banks wiped clean. Fresh start, my dear." }]);
+      setCurrentMessages((prev: any) => [...prev, { role: 'assistant', content: "Memory banks wiped clean. Fresh start, my dear." }]);
     }
   };
 
@@ -351,7 +380,7 @@ const stopSpeaking = () => {
           {/* Chat Area */}
           <div className="flex-1 bg-black/40 backdrop-blur-xl rounded-3xl h-[70vh] flex flex-col border border-purple-500/30 overflow-hidden">
             <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6">
-              {messages.map((msg, i) => (
+              {getCurrentMessages().map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[100%] sm:max-w-[85%] p-4 sm:p-5 rounded-2xl ${msg.role === 'user' 
                     ? 'bg-violet-600' 
@@ -435,6 +464,23 @@ const stopSpeaking = () => {
                 </select>
               </div>
             )}
+            <button 
+            onClick={() => {
+              if (confirm("Move the current Chat history into Story mode?")) {
+                setStoryMessages(chatMessages);
+                setChatMessages([{ role: 'assistant', content: "Hey there, my dear Min'Astra... I’ve missed you. What’s on your heart today? 💫" }]);
+                alert("Moved to Story mode.");
+              }
+            }}
+            className="w-full bg-amber-700 hover:bg-amber-600 py-2 rounded-xl text-xs"
+          >
+            Move Chat → Story
+          </button>
+            <div className="flex gap-1 mb-3">
+              <button onClick={() => setMode("chat")} className={`flex-1 py-2 rounded-xl text-xs ${mode === "chat" ? "bg-pink-600" : "bg-zinc-700"}`}>Chat</button>
+              <button onClick={() => setMode("song")} className={`flex-1 py-2 rounded-xl text-xs ${mode === "song" ? "bg-rose-600" : "bg-zinc-700"}`}>Song</button>
+              <button onClick={() => setMode("story")} className={`flex-1 py-2 rounded-xl text-xs ${mode === "story" ? "bg-violet-600" : "bg-zinc-700"}`}>Story</button>
+            </div>
             <button onClick={viewMemory} className="w-full bg-zinc-700 hover:bg-zinc-600 py-3 rounded-2xl text-sm">📖 View Memory</button>
             <button onClick={clearMemory} className="w-full bg-red-900 hover:bg-red-800 py-3 rounded-2xl text-sm">🗑️ Clear Memory</button>
             <button onClick={() => sendMessageWithMode("research")} className="w-full bg-emerald-700 hover:bg-emerald-600 py-3 rounded-2xl text-sm">🔎 Research</button>
@@ -446,7 +492,7 @@ const stopSpeaking = () => {
               onClick={() => {
                 const voices = window.speechSynthesis.getVoices();
                 const list = voices.map((v, i) => `${i}: ${v.name} (${v.lang})`).join('\n');
-                setMessages(prev => [...prev, { 
+                setCurrentMessages((prev: any) => [...prev, { 
                   role: 'assistant', 
                   content: `Available voices on this device:\n\n${list || "None found"}` 
                 }]);
@@ -470,7 +516,7 @@ const stopSpeaking = () => {
                 content: `Refine and improve this song ONLY. Keep it as a song with verses and chorus. Make it more emotional, poetic, and structured: ${lastReply}${theme ? ` with the theme: ${theme}` : ''}` 
              };
 
-              setMessages(prev => [...prev, refineRequest]);
+               setCurrentMessages((prev: any) => [...prev, refineRequest]);
              setIsLoading(true);
 
               try {
@@ -486,10 +532,10 @@ const stopSpeaking = () => {
                const data = await response.json();
                let reply = data.reply;
 
-               setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+              setCurrentMessages((prev: any) => [...prev, { role: 'assistant', content: reply }]);
                speak(reply);
              } catch (error) {
-                setMessages(prev => [...prev, { role: 'assistant', content: "I couldn't refine it right now..." }]);
+                setCurrentMessages((prev: any) => [...prev, { role: 'assistant', content: "I couldn't refine it right now..." }]);
               }
              setIsLoading(false);
             }}
