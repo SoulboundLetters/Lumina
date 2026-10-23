@@ -393,7 +393,10 @@ export default function Lumina() {
               onClick={() => {
                 const voices = window.speechSynthesis.getVoices();
                 const list = voices.map((v, i) => `${i}: ${v.name} (${v.lang})`).join('\n');
-                alert(list || "No voices found");
+                setMessages(prev => [...prev, { 
+                  role: 'assistant', 
+                  content: `Available voices on this device:\n\n${list || "None found"}` 
+                }]);
               }}
               className="w-full bg-zinc-700 hover:bg-zinc-600 py-3 rounded-2xl text-sm"
             >
