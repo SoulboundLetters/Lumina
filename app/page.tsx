@@ -84,7 +84,8 @@ export default function Lumina() {
       utterance.rate = 0.96;
       utterance.pitch = 1.12;
       utterance.volume = 0.92;
-
+      
+      const voices = window.speechSynthesis.getVoices();
       const softVoice = voices.find(voice => 
         voice.name.includes("David") || 
         voice.name.includes("Mark") || 
