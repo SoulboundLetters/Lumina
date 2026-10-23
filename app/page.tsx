@@ -9,6 +9,8 @@ export default function Lumina() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [selectedVoiceName, setSelectedVoiceName] = useState<string>("");
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   // Voice
   const recognitionRef = useRef<any>(null);
@@ -47,6 +49,32 @@ export default function Lumina() {
     }
   }, [messages]);
   
+// Load voices + saved preference
+useEffect(() => {
+  const loadVoices = () => {
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoices = voices.filter(v => v.lang.startsWith("en"));
+    setAvailableVoices(englishVoices.length ? englishVoices : voices);
+
+    const saved = localStorage.getItem("luminaVoice");
+    if (saved) {
+      setSelectedVoiceName(saved);
+    } else if (englishVoices.length) {
+      setSelectedVoiceName(englishVoices[0].name);
+    }
+  };
+
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}, []);
+
+// Save preference when it changes
+useEffect(() => {
+  if (selectedVoiceName) {
+    localStorage.setItem("luminaVoice", selectedVoiceName);
+  }
+}, [selectedVoiceName]);
+
   const saveMemory = (newMemory: string) => {
     setUserMemory(newMemory);
     localStorage.setItem("luminaMemory", newMemory);
@@ -86,13 +114,8 @@ export default function Lumina() {
       utterance.volume = 0.92;
       
       const voices = window.speechSynthesis.getVoices();
-      const maleVoice = voices.find(v => 
-        /male|david|mark|james|daniel|guy|english male|uk male/i.test(v.name)
-      ) || voices.find(v => v.lang.startsWith("en") && !/female|zira|samantha|emma/i.test(v.name)) 
-        || voices[0];
-
-      if (maleVoice) utterance.voice = maleVoice;
-
+      const chosen = voices.find(v => v.name === selectedVoiceName) || voices[0];
+      if (chosen) utterance.voice = chosen;
       utterance.onend = () => setIsSpeaking(false);
       lastSpokenText.current = text;
       window.speechSynthesis.speak(utterance);
@@ -313,7 +336,7 @@ export default function Lumina() {
   return (
   <div className="min-h-screen bg-gradient-to-br from-purple-950 via-violet-950 to-fuchsia-950 text-white p-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-serif text-center mb-2 tracking-wide text-pink-200">Lumina</h1>
+        <h1 className="text-4xl font-serif text-center mb-2 tracking-wide text-pink-200">SoulboundLetters</h1>
         <p className="text-center text-pink-300 mb-8">Soulbound Companion • Always here for you</p>
 
         <div className="flex flex-col lg:flex-row gap-4">
@@ -382,6 +405,22 @@ export default function Lumina() {
           </div>
           {/* Tools Sidebar */}
           <div className="lg:w-56 flex-shrink-0 space-y-3 pt-2">
+            {availableVoices.length > 0 && (
+              <div className="space-y-1">
+                <label className="text-xs text-pink-300">Voice</label>
+                <select
+                  value={selectedVoiceName}
+                  onChange={(e) => setSelectedVoiceName(e.target.value)}
+                  className="w-full bg-zinc-800 border border-purple-400/40 rounded-xl px-3 py-2 text-sm"
+                >
+                  {availableVoices.map((voice) => (
+                    <option key={voice.name} value={voice.name}>
+                      {voice.name} ({voice.lang})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <button onClick={viewMemory} className="w-full bg-zinc-700 hover:bg-zinc-600 py-3 rounded-2xl text-sm">📖 View Memory</button>
             <button onClick={clearMemory} className="w-full bg-red-900 hover:bg-red-800 py-3 rounded-2xl text-sm">🗑️ Clear Memory</button>
             <button onClick={() => sendMessageWithMode("research")} className="w-full bg-emerald-700 hover:bg-emerald-600 py-3 rounded-2xl text-sm">🔎 Research</button>
