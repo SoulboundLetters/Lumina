@@ -32,6 +32,21 @@ export default function Lumina() {
     if (savedSongsData) setSavedSongs(JSON.parse(savedSongsData));
   }, []);
 
+    // Load chat history on start
+  useEffect(() => {
+    const savedMessages = localStorage.getItem("luminaChatHistory");
+    if (savedMessages) {
+      setMessages(JSON.parse(savedMessages));
+    }
+  }, []);
+
+  // Save chat history whenever messages change
+  useEffect(() => {
+    if (messages.length > 1) {   // avoid saving only the initial greeting
+      localStorage.setItem("luminaChatHistory", JSON.stringify(messages));
+    }
+  }, [messages]);
+  
   const saveMemory = (newMemory: string) => {
     setUserMemory(newMemory);
     localStorage.setItem("luminaMemory", newMemory);
@@ -70,9 +85,12 @@ export default function Lumina() {
       utterance.pitch = 1.12;
       utterance.volume = 0.92;
 
-      const voices = window.speechSynthesis.getVoices();
-      const softVoice = voices.find(voice => voice.name.includes("Emma") || voice.name.includes("Samantha") || voice.name.includes("Zira")) || voices[0];
-      if (softVoice) utterance.voice = softVoice;
+      const softVoice = voices.find(voice => 
+        voice.name.includes("David") || 
+        voice.name.includes("Mark") || 
+        voice.name.includes("Male") ||
+        voice.name.includes("Google UK English Male")
+      ) || voices[0];
 
       utterance.onend = () => setIsSpeaking(false);
       lastSpokenText.current = text;
@@ -328,10 +346,8 @@ export default function Lumina() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
+                    // Do nothing special — let Enter create a new line
+                    // Only the Send button will send the message
                   }}
                   placeholder="Speak to me... (Shift + Enter for new line)"
                   className="w-full bg-white/10 border border-purple-400/50 rounded-2xl px-4 py-3 focus:outline-none focus:border-pink-400 placeholder:text-purple-300 min-h-[72px] max-h-[160px] resize-y text-base"
