@@ -389,7 +389,16 @@ export default function Lumina() {
             <button onClick={generateImagePrompt} className="w-full bg-fuchsia-600 hover:bg-fuchsia-700 py-3 rounded-2xl text-sm">🎨 Image Prompt</button>
             <button onClick={writeSong} className="w-full bg-rose-600 hover:bg-rose-700 py-3 rounded-2xl text-sm">🎵 Write a Song</button>
             <button onClick={viewSavedSongs} className="w-full bg-sky-700 hover:bg-sky-600 py-3 rounded-2xl text-sm">💾 Saved Songs ({savedSongs.length})</button>
-            
+            <button 
+              onClick={() => {
+                const voices = window.speechSynthesis.getVoices();
+                const list = voices.map((v, i) => `${i}: ${v.name} (${v.lang})`).join('\n');
+                alert(list || "No voices found");
+              }}
+              className="w-full bg-zinc-700 hover:bg-zinc-600 py-3 rounded-2xl text-sm"
+            >
+              List Voices
+            </button>
             {/* Refine Last Song */}
             <button 
               onClick={async () => {
