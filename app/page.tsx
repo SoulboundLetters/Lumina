@@ -57,7 +57,7 @@ useEffect(() => {
     setAvailableVoices(englishVoices.length ? englishVoices : voices);
 
     const saved = localStorage.getItem("luminaVoice");
-    if (saved) {
+    if (saved && voices.some(v => v.name === saved)) {
       setSelectedVoiceName(saved);
     } else if (englishVoices.length) {
       setSelectedVoiceName(englishVoices[0].name);
@@ -65,7 +65,9 @@ useEffect(() => {
   };
 
   loadVoices();
-  window.speechSynthesis.onvoiceschanged = loadVoices;
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
 }, []);
 
 // Save preference when it changes
@@ -106,20 +108,43 @@ useEffect(() => {
   };
 
   const speak = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.96;
-      utterance.pitch = 1.12;
-      utterance.volume = 0.92;
-      
+    if (!('speechSynthesis' in window)) return;
+
+    // Cancel anything currently speaking
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.96;
+    utterance.pitch = 1.05;
+    utterance.volume = 0.95;
+
+    const setVoiceAndSpeak = () => {
       const voices = window.speechSynthesis.getVoices();
-      const chosen = voices.find(v => v.name === selectedVoiceName) || voices[0];
+      let chosen = voices.find(v => v.name === selectedVoiceName);
+
+      // Fallback: prefer English voices that aren't obviously female
+      if (!chosen) {
+        chosen = voices.find(v => 
+          v.lang.startsWith("en") && 
+          !/female|woman|zira|samantha|emma|karen|fiona|susan/i.test(v.name)
+        ) || voices.find(v => v.lang.startsWith("en")) || voices[0];
+      }
+
       if (chosen) utterance.voice = chosen;
+
       utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+
       lastSpokenText.current = text;
       window.speechSynthesis.speak(utterance);
       setIsSpeaking(true);
+    };
+
+    // Voices can load late on mobile
+    if (window.speechSynthesis.getVoices().length) {
+      setVoiceAndSpeak();
+    } else {
+      window.speechSynthesis.onvoiceschanged = setVoiceAndSpeak;
     }
   };
 
@@ -360,7 +385,7 @@ useEffect(() => {
                 </div>
               </div>
             ))}
-              {isLoading && <div className="text-pink-300 italic">Lumina is thinking...</div>}
+              {isLoading && <div className="text-pink-300 italic">Riven is thinking...</div>}
               <div ref={chatEndRef} />
             </div>
 
