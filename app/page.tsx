@@ -57,7 +57,7 @@ useEffect(() => {
     setAvailableVoices(englishVoices.length ? englishVoices : voices);
 
     const saved = localStorage.getItem("luminaVoice");
-    if (saved && voices.some(v => v.name === saved)) {
+    if (saved) {
       setSelectedVoiceName(saved);
     } else if (englishVoices.length) {
       setSelectedVoiceName(englishVoices[0].name);
@@ -65,9 +65,7 @@ useEffect(() => {
   };
 
   loadVoices();
-  if (window.speechSynthesis.onvoiceschanged !== undefined) {
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-  }
+  window.speechSynthesis.onvoiceschanged = loadVoices;
 }, []);
 
 // Save preference when it changes
@@ -107,51 +105,36 @@ useEffect(() => {
     localStorage.setItem("luminaSavedSongs", JSON.stringify(updated));
   };
 
-  const speak = (text: string) => {
-    if (!('speechSynthesis' in window)) return;
+const speak = (text: string) => {
+  if (!('speechSynthesis' in window)) return;
 
-    // Cancel anything currently speaking
-    window.speechSynthesis.cancel();
+  window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.96;
-    utterance.pitch = 1.05;
-    utterance.volume = 0.95;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.96;
+  utterance.pitch = 1.05;
+  utterance.volume = 0.95;
 
-    const setVoiceAndSpeak = () => {
-      const voices = window.speechSynthesis.getVoices();
-      let chosen = voices.find(v => v.name === selectedVoiceName);
+  const voices = window.speechSynthesis.getVoices();
+  let chosen = voices.find(v => v.name === selectedVoiceName);
 
-      // Fallback: prefer English voices that aren't obviously female
-      if (!chosen) {
-        chosen = voices.find(v => 
-          v.lang.startsWith("en") && 
-          !/female|woman|zira|samantha|emma|karen|fiona|susan/i.test(v.name)
-        ) || voices.find(v => v.lang.startsWith("en")) || voices[0];
-      }
+  if (!chosen) {
+    chosen = voices.find(v => v.lang.startsWith("en")) || voices[0];
+  }
+  if (chosen) utterance.voice = chosen;
 
-      if (chosen) utterance.voice = chosen;
+  utterance.onend = () => setIsSpeaking(false);
+  utterance.onerror = () => setIsSpeaking(false);
 
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
+  lastSpokenText.current = text;
+  window.speechSynthesis.speak(utterance);
+  setIsSpeaking(true);
+};
 
-      lastSpokenText.current = text;
-      window.speechSynthesis.speak(utterance);
-      setIsSpeaking(true);
-    };
-
-    // Voices can load late on mobile
-    if (window.speechSynthesis.getVoices().length) {
-      setVoiceAndSpeak();
-    } else {
-      window.speechSynthesis.onvoiceschanged = setVoiceAndSpeak;
-    }
-  };
-
-  const stopSpeaking = () => {
-    window.speechSynthesis.cancel();
-    setIsSpeaking(false);
-  };
+const stopSpeaking = () => {
+  window.speechSynthesis.cancel();
+  setIsSpeaking(false);
+};
 
   const repeatLast = () => {
     if (lastSpokenText.current) speak(lastSpokenText.current);
@@ -410,9 +393,15 @@ useEffect(() => {
                     {isListening ? '⏹️' : '🎤'}
                   </button>
                   <button 
-                    onClick={isSpeaking ? stopSpeaking : repeatLast} 
+                    onClick={() => {
+                      if (isSpeaking) {
+                        stopSpeaking();
+                      } else if (lastSpokenText.current) {
+                        speak(lastSpokenText.current);
+                      }
+                    }}
                     className={`px-4 py-2.5 rounded-xl text-sm ${isSpeaking ? 'bg-amber-600' : 'bg-purple-700'}`}
-                    disabled={!lastSpokenText.current}
+                    disabled={!lastSpokenText.current && !isSpeaking}
                   >
                     {isSpeaking ? '⏹️' : '🔁'}
                   </button>
